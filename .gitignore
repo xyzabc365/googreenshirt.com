@@ -1,0 +1,68 @@
+# Local WordPress config
+wp-config.php
+
+# Uploads and generated media
+wp-content/uploads/
+wp-content/blogs.dir/
+
+# Cache, temporary files, and generated runtime data
+wp-content/cache/
+wp-content/upgrade/
+wp-content/advanced-cache.php
+wp-content/object-cache.php
+wp-content/debug.log
+wp-content/wflogs/
+wp-content/et-cache/
+
+# Migration, backup, and import artifacts
+wp-content/ai1wm-backups/
+wp-content/backups*/
+wp-content/backup*/
+wp-content/*backup*/
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
+*.tgz
+*.gz
+*.wpress
+*.sql
+*.sqlite
+*.sqlite3
+
+# Project-generated exports/assets for handoff, not deploy source
+exports/
+
+# Dependency/build output
+node_modules/
+/vendor/
+
+# Logs
+*.log
+error_log
+php_errorlog
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+auth.json
+*.pem
+*.key
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+*.bak
+*.orig
+
+# OS
+.DS_Store
+Thumbs.db
