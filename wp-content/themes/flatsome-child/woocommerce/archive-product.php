@@ -32,7 +32,7 @@ global $wp_query;
 $shop_url      = home_url( user_trailingslashit( 'collections/all' ) );
 $total         = isset( $wp_query->found_posts ) ? (int) $wp_query->found_posts : 0;
 $current_page  = max( 1, (int) get_query_var( 'paged' ) );
-$per_page      = isset( $wp_query->query_vars['posts_per_page'] ) ? (int) $wp_query->query_vars['posts_per_page'] : 16;
+$per_page      = isset( $wp_query->query_vars['posts_per_page'] ) ? (int) $wp_query->query_vars['posts_per_page'] : 18;
 $shown_first   = $total ? ( ( $current_page - 1 ) * $per_page ) + 1 : 0;
 $shown_last    = $total && $per_page > 0 ? min( $total, $current_page * $per_page ) : $total;
 $term          = $is_collection_archive ? get_queried_object() : null;
@@ -41,7 +41,7 @@ $search_query  = get_search_query( false );
 $category_list = get_terms(
 	array(
 		'taxonomy'   => 'product_cat',
-		'hide_empty' => false,
+		'hide_empty' => true,
 		'orderby'    => 'name',
 		'parent'     => 0,
 	)
@@ -264,6 +264,96 @@ if ( ! function_exists( 'child_theme_collection_url_with_query' ) ) {
 	}
 }
 
+if ( ! function_exists( 'child_theme_collection_attribute_options' ) ) {
+	function child_theme_collection_attribute_options( $attribute_name, $term = null ) {
+		if ( ! function_exists( 'wc_get_product' ) ) {
+			return array();
+		}
+
+		$target_name = sanitize_title( $attribute_name );
+		$query_args  = array(
+			'post_type'      => 'product',
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+		);
+
+		if ( $term instanceof WP_Term ) {
+			$query_args['tax_query'] = array(
+				array(
+					'taxonomy' => 'product_cat',
+					'field'    => 'term_id',
+					'terms'    => (int) $term->term_id,
+				),
+			);
+		}
+
+		$product_ids = get_posts( $query_args );
+
+		$options = array();
+
+		foreach ( $product_ids as $product_id ) {
+			$product = wc_get_product( $product_id );
+
+			if ( ! $product ) {
+				continue;
+			}
+
+			foreach ( $product->get_attributes() as $attribute ) {
+				$name = sanitize_title( str_replace( 'pa_', '', $attribute->get_name() ) );
+
+				if ( $target_name !== $name ) {
+					continue;
+				}
+
+				if ( $attribute->is_taxonomy() ) {
+					$values = wc_get_product_terms( $product_id, $attribute->get_name(), array( 'fields' => 'names' ) );
+				} else {
+					$values = $attribute->get_options();
+				}
+
+				foreach ( $values as $value ) {
+					$label = trim( wp_strip_all_tags( (string) $value ) );
+
+					if ( '' === $label ) {
+						continue;
+					}
+
+					$options[ sanitize_title( $label ) ] = $label;
+				}
+			}
+		}
+
+		natcasesort( $options );
+
+		return $options;
+	}
+}
+
+if ( ! function_exists( 'child_theme_collection_filter_group' ) ) {
+	function child_theme_collection_filter_group( $label, $key, $options, $active_values ) {
+		if ( empty( $options ) ) {
+			return;
+		}
+		?>
+		<div class="cf-collection-filter-block">
+			<button type="button" aria-expanded="true"><?php echo esc_html( $label ); ?> <span aria-hidden="true">&#xf102;</span></button>
+			<ul>
+				<?php foreach ( $options as $option_slug => $option_label ) : ?>
+					<?php $is_active = in_array( $option_slug, $active_values, true ); ?>
+					<li>
+						<a class="cf-collection-filter-option<?php echo $is_active ? ' is-active' : ''; ?>" href="<?php echo esc_url( child_theme_collection_filter_url( $key, $option_slug ) ); ?>">
+							<span aria-hidden="true"></span>
+							<span><?php echo esc_html( $option_label ); ?></span>
+						</a>
+					</li>
+				<?php endforeach; ?>
+			</ul>
+		</div>
+		<?php
+	}
+}
+
 if ( ! function_exists( 'child_theme_collection_pagination' ) ) {
 	function child_theme_collection_pagination() {
 		$total   = isset( $GLOBALS['wp_query']->max_num_pages ) ? (int) $GLOBALS['wp_query']->max_num_pages : 1;
@@ -303,11 +393,16 @@ if ( ! function_exists( 'child_theme_collection_pagination' ) ) {
 
 remove_action( 'flatsome_after_header', 'flatsome_category_header' );
 
+$active_min   = isset( $_GET['min_price'] ) ? sanitize_text_field( wp_unslash( $_GET['min_price'] ) ) : '';
+$active_max   = isset( $_GET['max_price'] ) ? sanitize_text_field( wp_unslash( $_GET['max_price'] ) ) : '';
+$active_styles = child_theme_collection_filter_values( 'style' );
 $active_sizes  = child_theme_collection_filter_values( 'size' );
 $active_colors = child_theme_collection_filter_values( 'color' );
-$active_min    = isset( $_GET['min_price'] ) ? sanitize_text_field( wp_unslash( $_GET['min_price'] ) ) : '';
-$active_max    = isset( $_GET['max_price'] ) ? sanitize_text_field( wp_unslash( $_GET['max_price'] ) ) : '';
-$price_ranges  = array(
+$filter_term   = $is_collection_archive ? $term : null;
+$style_options = child_theme_collection_attribute_options( 'Style', $filter_term );
+$size_options  = child_theme_collection_attribute_options( 'Size', $filter_term );
+$color_options = child_theme_collection_attribute_options( 'Color', $filter_term );
+$price_ranges = array(
 	array( 'label' => 'All', 'min' => '', 'max' => '' ),
 	array( 'label' => 'Up to $25', 'min' => '', 'max' => '25' ),
 	array( 'label' => '$25 to $50', 'min' => '25', 'max' => '50' ),
@@ -326,57 +421,38 @@ get_header( 'shop' );
 
 			<div class="cf-collection-layout">
 				<aside class="cf-collection-sidebar" aria-label="Product filters">
-					<div class="cf-collection-filter-block">
-						<button type="button" aria-expanded="true">Style <span aria-hidden="true">&#xf102;</span></button>
-						<ul>
-								<li>
-									<a class="cf-collection-filter-option<?php echo $is_shop_archive ? ' is-active' : ''; ?>" href="<?php echo esc_url( child_theme_collection_url_with_query( $shop_url ) ); ?>">
-										<span aria-hidden="true"></span>
-										<span>All</span>
-									</a>
-							</li>
-							<?php if ( ! is_wp_error( $category_list ) ) : ?>
-								<?php foreach ( $category_list as $category ) : ?>
+					<?php if ( $is_shop_archive ) : ?>
+						<div class="cf-collection-filter-block">
+							<button type="button" aria-expanded="true">Style <span aria-hidden="true">&#xf102;</span></button>
+							<ul>
 									<li>
-										<a class="cf-collection-filter-option<?php echo $term instanceof WP_Term && (int) $term->term_id === (int) $category->term_id ? ' is-active' : ''; ?>" href="<?php echo esc_url( child_theme_collection_url_with_query( child_theme_get_product_category_url( $category->slug ) ) ); ?>">
+										<a class="cf-collection-filter-option is-active" href="<?php echo esc_url( child_theme_collection_url_with_query( $shop_url ) ); ?>">
 											<span aria-hidden="true"></span>
-											<span><?php echo esc_html( $category->name ); ?></span>
+											<span>All</span>
 										</a>
-									</li>
-								<?php endforeach; ?>
-							<?php endif; ?>
-						</ul>
-					</div>
-
-					<div class="cf-collection-filter-block">
-						<button type="button" aria-expanded="true">Size <span aria-hidden="true">&#xf102;</span></button>
-						<ul>
-							<?php foreach ( array( '12X18', '28X40', '2XL', '3XL', '4XL', '5XL', 'L', 'M', 'S', 'XL', 'XS' ) as $size ) : ?>
-								<?php $size_slug = sanitize_title( $size ); ?>
-								<li>
-									<a class="cf-collection-filter-option<?php echo in_array( $size_slug, $active_sizes, true ) ? ' is-active' : ''; ?>" href="<?php echo esc_url( child_theme_collection_filter_url( 'size', $size_slug ) ); ?>">
-										<span aria-hidden="true"></span>
-										<span><?php echo esc_html( $size ); ?></span>
-									</a>
 								</li>
-							<?php endforeach; ?>
-						</ul>
-					</div>
+								<?php if ( ! is_wp_error( $category_list ) ) : ?>
+									<?php foreach ( $category_list as $category ) : ?>
+										<li>
+											<a class="cf-collection-filter-option" href="<?php echo esc_url( child_theme_collection_url_with_query( child_theme_get_product_category_url( $category->slug ) ) ); ?>">
+												<span aria-hidden="true"></span>
+												<span><?php echo esc_html( $category->name ); ?></span>
+											</a>
+										</li>
+									<?php endforeach; ?>
+								<?php endif; ?>
+							</ul>
+						</div>
+					<?php endif; ?>
 
-					<div class="cf-collection-filter-block">
-						<button type="button" aria-expanded="true">Color <span aria-hidden="true">&#xf102;</span></button>
-						<ul>
-							<?php foreach ( array( 'Black', 'Cardinal Red', 'Colorful', 'Ice Grey', 'Military Green', 'Navy', 'Sand', 'White' ) as $color ) : ?>
-								<?php $color_slug = sanitize_title( $color ); ?>
-								<li>
-									<a class="cf-collection-filter-option<?php echo in_array( $color_slug, $active_colors, true ) ? ' is-active' : ''; ?>" href="<?php echo esc_url( child_theme_collection_filter_url( 'color', $color_slug ) ); ?>">
-										<span aria-hidden="true"></span>
-										<span><?php echo esc_html( $color ); ?></span>
-									</a>
-								</li>
-							<?php endforeach; ?>
-						</ul>
-					</div>
+					<?php
+					if ( ! $is_shop_archive ) {
+						child_theme_collection_filter_group( 'Style', 'style', $style_options, $active_styles );
+					}
+
+					child_theme_collection_filter_group( 'Size', 'size', $size_options, $active_sizes );
+					child_theme_collection_filter_group( 'Color', 'color', $color_options, $active_colors );
+					?>
 
 					<div class="cf-collection-filter-block">
 						<button type="button" aria-expanded="true">Price <span aria-hidden="true">&#xf102;</span></button>

@@ -457,10 +457,92 @@ function child_theme_render_auth_pages()
 function child_theme_collection_products_per_page($per_page)
 {
 	if ((function_exists('is_product_category') && is_product_category()) || is_post_type_archive('product')) {
-		return 16;
+		return 18;
 	}
 
 	return $per_page;
+}
+
+function child_theme_collection_request_filter_values($key)
+{
+	$param = 'filter_' . $key;
+
+	if (empty($_GET[$param])) {
+		return array();
+	}
+
+	$values = wp_unslash($_GET[$param]);
+	$values = is_array($values) ? $values : explode(',', $values);
+
+	return array_values(array_unique(array_filter(array_map('sanitize_title', $values))));
+}
+
+function child_theme_product_matches_attribute_filter($product, $attribute_name, $selected_values)
+{
+	if (!$product || empty($selected_values)) {
+		return true;
+	}
+
+	$target_name = sanitize_title($attribute_name);
+
+	foreach ($product->get_attributes() as $attribute) {
+		$name = sanitize_title(str_replace('pa_', '', $attribute->get_name()));
+
+		if ($target_name !== $name) {
+			continue;
+		}
+
+		if ($attribute->is_taxonomy()) {
+			$values = wc_get_product_terms($product->get_id(), $attribute->get_name(), array('fields' => 'names'));
+		} else {
+			$values = $attribute->get_options();
+		}
+
+		foreach ($values as $value) {
+			if (in_array(sanitize_title(wp_strip_all_tags((string) $value)), $selected_values, true)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	return false;
+}
+
+function child_theme_collection_filtered_product_ids($filters)
+{
+	if (!function_exists('wc_get_product')) {
+		return array();
+	}
+
+	$product_ids = get_posts(
+		array(
+			'post_type' => 'product',
+			'post_status' => 'publish',
+			'posts_per_page' => -1,
+			'fields' => 'ids',
+		)
+	);
+	$matching_ids = array();
+
+	foreach ($product_ids as $product_id) {
+		$product = wc_get_product($product_id);
+
+		if (!$product) {
+			continue;
+		}
+
+		foreach ($filters as $attribute_name => $selected_values) {
+			if (!child_theme_product_matches_attribute_filter($product, $attribute_name, $selected_values)) {
+				continue 2;
+			}
+		}
+
+		$matching_ids[] = (int) $product_id;
+	}
+
+	return $matching_ids;
 }
 
 function child_theme_collection_archive_query($query)
@@ -479,54 +561,24 @@ function child_theme_collection_archive_query($query)
 		return;
 	}
 
-	$query->set('posts_per_page', 16);
-
-	$tax_query = $query->get('tax_query');
-	$tax_query = is_array($tax_query) ? $tax_query : array();
-
-	foreach (array('size' => 'pa_size', 'color' => 'pa_color') as $filter_key => $taxonomy) {
-		if (empty($_GET['filter_' . $filter_key])) {
-			continue;
-		}
-
-		$values = wp_unslash($_GET['filter_' . $filter_key]);
-		$values = is_array($values) ? $values : explode(',', $values);
-		$values = array_filter(array_map('sanitize_title', $values));
-
-		if (empty($values)) {
-			continue;
-		}
-
-		if (taxonomy_exists($taxonomy)) {
-			$tax_query[] = array(
-				'taxonomy' => $taxonomy,
-				'field' => 'slug',
-				'terms' => $values,
-				'operator' => 'IN',
-			);
-			continue;
-		}
-
-		$fallback_terms = child_theme_collection_filter_fallback_category_slugs($filter_key, $values);
-
-		if (!empty($fallback_terms)) {
-			$tax_query[] = array(
-				'taxonomy' => 'product_cat',
-				'field' => 'slug',
-				'terms' => $fallback_terms,
-				'operator' => 'IN',
-			);
-		}
-	}
-
-	if (!empty($tax_query)) {
-		$query->set('tax_query', $tax_query);
-	}
+	$query->set('posts_per_page', 18);
 
 	$meta_query = $query->get('meta_query');
 	$meta_query = is_array($meta_query) ? $meta_query : array();
 	$min_price = isset($_GET['min_price']) && '' !== $_GET['min_price'] ? (float) sanitize_text_field(wp_unslash($_GET['min_price'])) : null;
 	$max_price = isset($_GET['max_price']) && '' !== $_GET['max_price'] ? (float) sanitize_text_field(wp_unslash($_GET['max_price'])) : null;
+	$attribute_filters = array_filter(
+		array(
+			'Style' => child_theme_collection_request_filter_values('style'),
+			'Size' => child_theme_collection_request_filter_values('size'),
+			'Color' => child_theme_collection_request_filter_values('color'),
+		)
+	);
+
+	if (!empty($attribute_filters)) {
+		$matching_ids = child_theme_collection_filtered_product_ids($attribute_filters);
+		$query->set('post__in', !empty($matching_ids) ? $matching_ids : array(0));
+	}
 
 	if (null !== $min_price || null !== $max_price) {
 		$price_filter = array(
@@ -551,49 +603,6 @@ function child_theme_collection_archive_query($query)
 	if (!empty($meta_query)) {
 		$query->set('meta_query', $meta_query);
 	}
-}
-
-function child_theme_collection_filter_fallback_category_slugs($filter_key, $values)
-{
-	$map = array(
-		'size' => array(
-			'12x18' => array('flag'),
-			'28x40' => array('flag'),
-			'xs' => array('t-shirt'),
-			's' => array('t-shirt'),
-			'm' => array('t-shirt'),
-			'l' => array('t-shirt'),
-			'xl' => array('t-shirt'),
-			'2xl' => array('t-shirt'),
-			'3xl' => array('t-shirt'),
-			'4xl' => array('t-shirt'),
-			'5xl' => array('t-shirt'),
-		),
-		'color' => array(
-			'black' => array('t-shirt'),
-			'cardinal-red' => array('t-shirt'),
-			'colorful' => array('flag', 't-shirt'),
-			'ice-grey' => array('t-shirt'),
-			'military-green' => array('t-shirt'),
-			'navy' => array('t-shirt'),
-			'sand' => array('t-shirt'),
-			'white' => array('t-shirt'),
-		),
-	);
-
-	if (empty($map[$filter_key])) {
-		return array();
-	}
-
-	$terms = array();
-
-	foreach ($values as $value) {
-		if (!empty($map[$filter_key][$value])) {
-			$terms = array_merge($terms, $map[$filter_key][$value]);
-		}
-	}
-
-	return array_values(array_unique($terms));
 }
 
 function child_theme_flat_product_category_link($termlink, $term, $taxonomy)

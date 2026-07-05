@@ -36,7 +36,7 @@ $header_nav_items = array(
 			</a>
 
 			<a class="cf-logo" href="<?php echo esc_url(home_url('/')); ?>" aria-label="<?php bloginfo('name'); ?>">
-				<img src="<?php echo esc_url(content_url('uploads/cloudfront-assets/site-logo.jpg')); ?>" alt="<?php bloginfo('name'); ?>" width="80" height="80">
+				<img src="<?php echo esc_url(content_url('uploads/cloudfront-assets/logo-concepts/googreenshirt-logo-10.png')); ?>" alt="<?php bloginfo('name'); ?>" width="80" height="80">
 			</a>
 
 			<form role="search" method="get" class="cf-search-form" action="<?php echo esc_url(home_url('/')); ?>">
