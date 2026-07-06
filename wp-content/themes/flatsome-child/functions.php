@@ -2,7 +2,7 @@
 // Add custom Theme Functions here.
 
 add_action('after_setup_theme', 'child_theme_layout_hooks', 20);
-add_action('wp_enqueue_scripts', 'child_theme_enqueue_child_styles', 101);
+add_action('wp_enqueue_scripts', 'child_theme_enqueue_child_styles', 999);
 add_action('wp_enqueue_scripts', 'child_theme_enqueue_product_scripts', 120);
 add_action('init', 'child_theme_use_collections_category_base', 0);
 add_action('init', 'child_theme_add_collections_rewrite_rules', 9);
@@ -15,6 +15,7 @@ add_filter('woocommerce_account_menu_items', 'child_theme_account_menu_items', 2
 add_filter('woocommerce_logout_default_redirect_url', 'child_theme_logout_redirect_url');
 add_filter('woocommerce_add_to_cart_redirect', 'child_theme_buy_now_redirect');
 add_filter('loop_shop_per_page', 'child_theme_collection_products_per_page', 20);
+add_filter('woocommerce_get_availability_text', 'child_theme_product_availability_text', 10, 2);
 add_filter('flatsome_header_class', 'child_theme_disable_sticky_header_classes', 99);
 add_filter('nav_menu_css_class', 'child_theme_primary_menu_item_classes', 10, 4);
 add_action('pre_get_posts', 'child_theme_collection_archive_query', 20);
@@ -40,6 +41,10 @@ function child_theme_enqueue_child_styles()
 
 	wp_dequeue_style('flatsome-style');
 	wp_enqueue_style('flatsome-style', get_stylesheet_uri(), array('flatsome-main'), $stylesheet_ver, 'all');
+	wp_add_inline_style(
+		'flatsome-style',
+		'.cf-product-cart .stock{margin:0}.cf-product-cart .woocommerce-variation-availability{margin-bottom:16px;width:100%}'
+	);
 }
 
 function child_theme_enqueue_product_scripts()
@@ -61,6 +66,15 @@ function child_theme_enqueue_product_scripts()
 		filemtime($script_path),
 		true
 	);
+}
+
+function child_theme_product_availability_text($availability, $product)
+{
+	if ($product instanceof WC_Product && $product->is_in_stock()) {
+		return __('In Stock', 'flatsome-child');
+	}
+
+	return $availability;
 }
 
 function child_theme_disable_sticky_header_classes($classes)

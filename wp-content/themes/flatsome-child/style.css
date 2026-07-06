@@ -2416,6 +2416,11 @@ input.cf-collection-filter-toggle[type="checkbox"] {
     width: 100%;
 }
 
+.cf-product-cart .woocommerce-variation-availability {
+    margin-bottom: 16px;
+    width: 100%;
+}
+
 .cf-product-cart .stock.in-stock {
     background: #f7faf7;
     border: 1px solid #dfe9e1;
@@ -2439,6 +2444,8 @@ input.cf-collection-filter-toggle[type="checkbox"] {
 .cf-product-cart .quantity {
     flex: 1 0 100%;
     margin: 0;
+    display: flex;
+    align-items: center;
 }
 
 .cf-product-cart .quantity:before {
@@ -2448,14 +2455,14 @@ input.cf-collection-filter-toggle[type="checkbox"] {
     font-size: 14px;
     font-weight: 400;
     line-height: 1.35;
-    margin: 0 0 8px;
+    margin: 0 12px 0 0;
 }
 
 .cf-product-cart .quantity input.qty,
 .cf-product-cart .ux-quantity__button {
     border-color: var(--cf-line);
     box-shadow: none;
-    height: 34px;
+    height: 39px;
 }
 
 .cf-product-cart .single_add_to_cart_button,
