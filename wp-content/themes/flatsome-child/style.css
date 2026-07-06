@@ -910,6 +910,8 @@ p.stars.selected a.active~a {
     display: flex;
     gap: 16px;
     min-width: 0;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .cf-promo-item img {
@@ -925,6 +927,7 @@ p.stars.selected a.active~a {
     font-weight: 700;
     line-height: 1.2;
     margin: 0 0 6px;
+    text-align: center;
 }
 
 .cf-promo-item p {
