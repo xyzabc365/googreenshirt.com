@@ -7,7 +7,7 @@
 
 get_header();
 
-$shop_url = function_exists('wc_get_page_permalink') ? wc_get_page_permalink('shop') : home_url('/shop/');
+$back_to_school_url = home_url(user_trailingslashit('collections/back-to-school'));
 
 if (!function_exists('child_theme_home_asset')) {
 	function child_theme_home_asset($path)
@@ -112,9 +112,9 @@ if (!function_exists('child_theme_home_product_section')) {
 <div class="cf-home">
 	<section class="cf-home-hero">
 		<div class="cf-container">
-			<a class="cf-home-banner" href="<?php echo esc_url($shop_url); ?>">
-				<img src="<?php echo esc_url(content_url('uploads/cloudfront-assets/home-banner-1300x600.png')); ?>"
-					alt="Banner">
+			<a class="cf-home-banner" href="<?php echo esc_url($back_to_school_url); ?>">
+				<img src="<?php echo esc_url(content_url('uploads/cloudfront-assets/back-to-school-hero.jpg')); ?>"
+					alt="Back to school - ready to shine">
 			</a>
 		</div>
 	</section>
