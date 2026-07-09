@@ -1159,6 +1159,11 @@ p.stars.selected a.active~a {
     width: 125px;
 }
 
+.cf-trustpilot-widget {
+    margin-left: auto;
+    text-align: right;
+}
+
 .cf-socials {
     display: flex;
     gap: 10px;
@@ -3636,6 +3641,10 @@ input.cf-collection-filter-toggle[type="checkbox"] {
     .cf-footer-bottom .cf-container {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .cf-trustpilot-widget {
+        width: 100%;
     }
 
     .cf-payments {

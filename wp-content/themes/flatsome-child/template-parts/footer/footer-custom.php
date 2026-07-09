@@ -60,6 +60,10 @@ $contact_information_url = child_theme_get_page_url('contact-information', $cont
 	<div class="cf-footer-bottom">
 		<div class="cf-container">
 			<p>&copy; <?php echo esc_html($year); ?> GooGreenShirt. All Rights Reserved.</p>
+			<script type="text/javascript" src="//widget.trustpilot.com/bootstrap/v5/tp.widget.bootstrap.min.js" async></script>
+			<div class="trustpilot-widget cf-trustpilot-widget" data-locale="en-US" data-template-id="56278e9abfbbba0bdcd568bc" data-businessunit-id="6a4e22828376b966f902edca" data-style-height="52px" data-style-width="100%" data-token="1a7a7f97-4a5e-4d58-a8dd-31a1d71abf2b">
+				<a href="https://www.trustpilot.com/review/googreenshirt.com" target="_blank" rel="noopener">Trustpilot</a>
+			</div>
 		</div>
 	</div>
 </div>
