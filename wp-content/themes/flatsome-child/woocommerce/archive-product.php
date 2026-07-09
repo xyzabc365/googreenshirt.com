@@ -354,6 +354,78 @@ if ( ! function_exists( 'child_theme_collection_filter_group' ) ) {
 	}
 }
 
+if ( ! function_exists( 'child_theme_collection_filters' ) ) {
+	function child_theme_collection_filters( $args ) {
+		$is_shop_archive  = ! empty( $args['is_shop_archive'] );
+		$category_list    = isset( $args['category_list'] ) ? $args['category_list'] : array();
+		$shop_url         = isset( $args['shop_url'] ) ? $args['shop_url'] : '';
+		$style_options    = isset( $args['style_options'] ) ? $args['style_options'] : array();
+		$size_options     = isset( $args['size_options'] ) ? $args['size_options'] : array();
+		$color_options    = isset( $args['color_options'] ) ? $args['color_options'] : array();
+		$active_styles    = isset( $args['active_styles'] ) ? $args['active_styles'] : array();
+		$active_sizes     = isset( $args['active_sizes'] ) ? $args['active_sizes'] : array();
+		$active_colors    = isset( $args['active_colors'] ) ? $args['active_colors'] : array();
+		$price_ranges     = isset( $args['price_ranges'] ) ? $args['price_ranges'] : array();
+		$active_min       = isset( $args['active_min'] ) ? $args['active_min'] : '';
+		$active_max       = isset( $args['active_max'] ) ? $args['active_max'] : '';
+		?>
+		<?php if ( $is_shop_archive ) : ?>
+			<div class="cf-collection-filter-block">
+				<button type="button" aria-expanded="true">Style <span aria-hidden="true">&#xf102;</span></button>
+				<ul>
+					<li>
+						<a class="cf-collection-filter-option is-active" href="<?php echo esc_url( child_theme_collection_url_with_query( $shop_url ) ); ?>">
+							<span aria-hidden="true"></span>
+							<span>All</span>
+						</a>
+					</li>
+					<?php if ( ! is_wp_error( $category_list ) ) : ?>
+						<?php foreach ( $category_list as $category ) : ?>
+							<li>
+								<a class="cf-collection-filter-option" href="<?php echo esc_url( child_theme_collection_url_with_query( child_theme_get_product_category_url( $category->slug ) ) ); ?>">
+									<span aria-hidden="true"></span>
+									<span><?php echo esc_html( $category->name ); ?></span>
+								</a>
+							</li>
+						<?php endforeach; ?>
+					<?php endif; ?>
+				</ul>
+			</div>
+		<?php endif; ?>
+
+		<?php
+		if ( ! $is_shop_archive ) {
+			child_theme_collection_filter_group( 'Style', 'style', $style_options, $active_styles );
+		}
+
+		child_theme_collection_filter_group( 'Size', 'size', $size_options, $active_sizes );
+		child_theme_collection_filter_group( 'Color', 'color', $color_options, $active_colors );
+		?>
+
+		<div class="cf-collection-filter-block">
+			<button type="button" aria-expanded="true">Price <span aria-hidden="true">&#xf102;</span></button>
+			<ul>
+				<?php foreach ( $price_ranges as $price ) : ?>
+					<?php $is_price_active = (string) $price['min'] === (string) $active_min && (string) $price['max'] === (string) $active_max; ?>
+					<li>
+						<a class="cf-collection-filter-option<?php echo $is_price_active ? ' is-active' : ''; ?>" href="<?php echo esc_url( child_theme_collection_price_url( $price['min'], $price['max'] ) ); ?>">
+							<span aria-hidden="true"></span>
+							<span><?php echo esc_html( $price['label'] ); ?></span>
+						</a>
+					</li>
+				<?php endforeach; ?>
+			</ul>
+			<form class="cf-collection-price-inputs" method="get" action="<?php echo esc_url( child_theme_collection_current_url() ); ?>">
+				<?php child_theme_collection_hidden_query_fields( array( 'min_price', 'max_price' ) ); ?>
+				<label><span>$</span><input type="number" name="min_price" value="<?php echo esc_attr( $active_min ); ?>" placeholder="Min" min="0" step="1"></label>
+				<label><span>$</span><input type="number" name="max_price" value="<?php echo esc_attr( $active_max ); ?>" placeholder="Max" min="0" step="1"></label>
+				<button type="submit">Go</button>
+			</form>
+		</div>
+		<?php
+	}
+}
+
 if ( ! function_exists( 'child_theme_collection_pagination' ) ) {
 	function child_theme_collection_pagination() {
 		$total   = isset( $GLOBALS['wp_query']->max_num_pages ) ? (int) $GLOBALS['wp_query']->max_num_pages : 1;
@@ -410,6 +482,20 @@ $price_ranges = array(
 	array( 'label' => '$100 to $150', 'min' => '100', 'max' => '150' ),
 	array( 'label' => '$150 & above', 'min' => '150', 'max' => '' ),
 );
+$collection_filter_args = array(
+	'is_shop_archive' => $is_shop_archive,
+	'category_list'   => $category_list,
+	'shop_url'        => $shop_url,
+	'style_options'   => $style_options,
+	'size_options'    => $size_options,
+	'color_options'   => $color_options,
+	'active_styles'   => $active_styles,
+	'active_sizes'    => $active_sizes,
+	'active_colors'   => $active_colors,
+	'price_ranges'    => $price_ranges,
+	'active_min'      => $active_min,
+	'active_max'      => $active_max,
+);
 
 get_header( 'shop' );
 ?>
@@ -419,61 +505,19 @@ get_header( 'shop' );
 		<div class="cf-container">
 			<?php wc_print_notices(); ?>
 
+			<input class="cf-collection-filter-toggle" type="checkbox" id="cf-collection-filter-toggle" aria-hidden="true">
+			<label class="cf-collection-filter-backdrop" for="cf-collection-filter-toggle" aria-label="Close filters"></label>
+			<aside class="cf-collection-filter-drawer" aria-label="Product filters">
+				<div class="cf-collection-filter-header">
+					<span>Filters</span>
+					<label for="cf-collection-filter-toggle" aria-label="Close filters">&times;</label>
+				</div>
+				<?php child_theme_collection_filters( $collection_filter_args ); ?>
+			</aside>
+
 			<div class="cf-collection-layout">
 				<aside class="cf-collection-sidebar" aria-label="Product filters">
-					<?php if ( $is_shop_archive ) : ?>
-						<div class="cf-collection-filter-block">
-							<button type="button" aria-expanded="true">Style <span aria-hidden="true">&#xf102;</span></button>
-							<ul>
-									<li>
-										<a class="cf-collection-filter-option is-active" href="<?php echo esc_url( child_theme_collection_url_with_query( $shop_url ) ); ?>">
-											<span aria-hidden="true"></span>
-											<span>All</span>
-										</a>
-								</li>
-								<?php if ( ! is_wp_error( $category_list ) ) : ?>
-									<?php foreach ( $category_list as $category ) : ?>
-										<li>
-											<a class="cf-collection-filter-option" href="<?php echo esc_url( child_theme_collection_url_with_query( child_theme_get_product_category_url( $category->slug ) ) ); ?>">
-												<span aria-hidden="true"></span>
-												<span><?php echo esc_html( $category->name ); ?></span>
-											</a>
-										</li>
-									<?php endforeach; ?>
-								<?php endif; ?>
-							</ul>
-						</div>
-					<?php endif; ?>
-
-					<?php
-					if ( ! $is_shop_archive ) {
-						child_theme_collection_filter_group( 'Style', 'style', $style_options, $active_styles );
-					}
-
-					child_theme_collection_filter_group( 'Size', 'size', $size_options, $active_sizes );
-					child_theme_collection_filter_group( 'Color', 'color', $color_options, $active_colors );
-					?>
-
-					<div class="cf-collection-filter-block">
-						<button type="button" aria-expanded="true">Price <span aria-hidden="true">&#xf102;</span></button>
-						<ul>
-							<?php foreach ( $price_ranges as $price ) : ?>
-								<?php $is_price_active = (string) $price['min'] === (string) $active_min && (string) $price['max'] === (string) $active_max; ?>
-								<li>
-									<a class="cf-collection-filter-option<?php echo $is_price_active ? ' is-active' : ''; ?>" href="<?php echo esc_url( child_theme_collection_price_url( $price['min'], $price['max'] ) ); ?>">
-										<span aria-hidden="true"></span>
-										<span><?php echo esc_html( $price['label'] ); ?></span>
-									</a>
-								</li>
-							<?php endforeach; ?>
-						</ul>
-						<form class="cf-collection-price-inputs" method="get" action="<?php echo esc_url( child_theme_collection_current_url() ); ?>">
-							<?php child_theme_collection_hidden_query_fields( array( 'min_price', 'max_price' ) ); ?>
-							<label><span>$</span><input type="number" name="min_price" value="<?php echo esc_attr( $active_min ); ?>" placeholder="Min" min="0" step="1"></label>
-							<label><span>$</span><input type="number" name="max_price" value="<?php echo esc_attr( $active_max ); ?>" placeholder="Max" min="0" step="1"></label>
-							<button type="submit">Go</button>
-						</form>
-					</div>
+					<?php child_theme_collection_filters( $collection_filter_args ); ?>
 				</aside>
 
 				<div class="cf-collection-results">
@@ -482,7 +526,13 @@ get_header( 'shop' );
 							<h1><?php echo esc_html( $term_name ); ?></h1>
 							<p><?php echo esc_html( child_theme_collection_result_count( $total, $shown_first, $shown_last ) ); ?></p>
 						</div>
-						<?php child_theme_collection_ordering(); ?>
+						<div class="cf-collection-topbar__actions">
+							<label class="cf-collection-filter-button cf-collection-mobile-filter-button" for="cf-collection-filter-toggle">
+								<span aria-hidden="true"></span>
+								<span>Filter</span>
+							</label>
+							<?php child_theme_collection_ordering(); ?>
+						</div>
 					</div>
 
 					<?php if ( woocommerce_product_loop() ) : ?>
