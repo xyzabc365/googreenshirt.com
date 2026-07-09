@@ -29,7 +29,8 @@
             var $pill = $(this);
             var isActive = $pill.data('value') === currentValue;
             var option = findOptionByValue($select, $pill.data('value'));
-            var isAvailable = option && !option.disabled;
+            var $option = option ? $(option) : $();
+            var isAvailable = option && !$option.prop('disabled') && (!$option.hasClass('attached') || $option.hasClass('enabled'));
 
             $pill.toggleClass('is-hidden', !isAvailable);
             $pill.prop('disabled', !isAvailable);

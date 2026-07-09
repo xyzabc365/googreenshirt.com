@@ -1912,17 +1912,40 @@ input.cf-collection-filter-toggle[type="checkbox"] {
 
 .cf-product-gallery .product-thumbnails {
     align-self: start;
-    display: grid;
-    gap: 10px;
+    display: block;
     grid-column: 1;
     grid-row: 1;
     margin: 0;
+    overflow: visible;
     width: 100%;
+}
+
+.cf-product-gallery .product-thumbnails.thumbnails.slider.row.row-small.row-slider.slider-nav-small.small-columns-4.is-draggable.flickity-enabled {
+    display: block;
+    overflow: visible;
+}
+
+.cf-product-gallery .product-thumbnails.flickity-enabled .flickity-viewport {
+    height: auto !important;
+    max-height: min(585px, calc(100vh - 120px));
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 2px;
+    scrollbar-width: thin;
+}
+
+.cf-product-gallery .product-thumbnails.flickity-enabled .flickity-viewport::-webkit-scrollbar {
+    width: 4px;
+}
+
+.cf-product-gallery .product-thumbnails.flickity-enabled .flickity-viewport::-webkit-scrollbar-thumb {
+    background: #cfd8d1;
+    border-radius: 999px;
 }
 
 .cf-product-gallery .product-thumbnails .flickity-viewport {
     height: auto !important;
-    overflow: visible;
 }
 
 .cf-product-gallery .product-thumbnails .flickity-slider {
@@ -1930,6 +1953,11 @@ input.cf-collection-filter-toggle[type="checkbox"] {
     gap: 10px;
     position: static !important;
     transform: none !important;
+    width: 100% !important;
+}
+
+.cf-product-gallery .product-thumbnails .flickity-prev-next-button {
+    display: none;
 }
 
 .cf-product-gallery .product-thumbnails .col {
@@ -1973,6 +2001,36 @@ input.cf-collection-filter-toggle[type="checkbox"] {
     background: #f5f6f6;
     border-radius: 8px;
     overflow: hidden;
+}
+
+.cf-product-gallery .product-images {
+    position: relative;
+}
+
+.cf-product-gallery .product-images .image-tools.bottom {
+    bottom: 14px;
+    left: auto;
+    right: 14px;
+    z-index: 4;
+}
+
+.cf-product-gallery .product-images .zoom-button {
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--cf-line);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+    color: var(--cf-ink);
+    display: inline-flex;
+    height: 40px;
+    justify-content: center;
+    margin: 0;
+    width: 40px;
+}
+
+.cf-product-gallery .product-images .zoom-button:hover {
+    background: var(--cf-ink);
+    border-color: var(--cf-ink);
+    color: #fff;
 }
 
 .cf-product-gallery .woocommerce-product-gallery__image a {
@@ -3157,35 +3215,59 @@ input.cf-collection-filter-toggle[type="checkbox"] {
         display: grid;
         gap: 12px;
         grid-template-columns: 1fr;
+        overflow: hidden;
     }
 
     .cf-product-gallery .product-images,
     .cf-product-gallery .woocommerce-product-gallery {
         grid-column: 1;
         grid-row: 1;
+        max-width: 100%;
+        min-width: 0;
+        width: 100% !important;
+    }
+
+    .cf-product-gallery .product-images .image-tools.bottom {
+        bottom: 10px;
+        right: 10px;
     }
 
     .cf-product-gallery .product-thumbnails {
         display: block;
         grid-column: 1;
         grid-row: 2;
-        overflow-x: auto;
-        padding-bottom: 2px;
+        max-height: none;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        padding: 0 0 2px;
+        padding-right: 0;
+        width: 100% !important;
+        -webkit-overflow-scrolling: touch;
     }
 
     .cf-product-gallery .product-thumbnails::-webkit-scrollbar {
         display: none;
     }
 
+    .cf-product-gallery .product-thumbnails.flickity-enabled .flickity-viewport,
     .cf-product-gallery .product-thumbnails .flickity-viewport {
-        overflow: visible;
+        height: 64px !important;
+        max-height: none;
+        overflow: visible !important;
+        padding-right: 0;
+        width: 100% !important;
     }
 
     .cf-product-gallery .product-thumbnails .flickity-slider {
         display: flex;
+        flex-wrap: nowrap;
         gap: 10px;
+        min-width: max-content;
         position: static !important;
         transform: none !important;
+        width: max-content !important;
     }
 
     .cf-product-gallery .product-thumbnails .col {

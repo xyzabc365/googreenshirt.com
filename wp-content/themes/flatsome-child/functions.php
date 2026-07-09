@@ -17,6 +17,7 @@ add_filter('woocommerce_add_to_cart_redirect', 'child_theme_buy_now_redirect');
 add_filter('loop_shop_per_page', 'child_theme_collection_products_per_page', 20);
 add_filter('woocommerce_get_availability_text', 'child_theme_product_availability_text', 10, 2);
 add_filter('woocommerce_get_price_html', 'child_theme_variable_product_min_price_html', 10, 2);
+add_filter('woocommerce_ajax_variation_threshold', 'child_theme_ajax_variation_threshold', 10, 2);
 add_filter('flatsome_header_class', 'child_theme_disable_sticky_header_classes', 99);
 add_filter('nav_menu_css_class', 'child_theme_primary_menu_item_classes', 10, 4);
 add_action('pre_get_posts', 'child_theme_collection_archive_query', 20);
@@ -97,6 +98,15 @@ function child_theme_variable_product_min_price_html($price_html, $product)
 	}
 
 	return wc_price($min_price);
+}
+
+function child_theme_ajax_variation_threshold($threshold, $product)
+{
+	if ($product instanceof WC_Product_Variable) {
+		return max((int) $threshold, 300);
+	}
+
+	return $threshold;
 }
 
 function child_theme_disable_sticky_header_classes($classes)
