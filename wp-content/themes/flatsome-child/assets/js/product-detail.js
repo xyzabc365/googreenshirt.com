@@ -15,6 +15,12 @@
         return option.text || option.value || '';
     }
 
+    function findOptionByValue($select, value) {
+        return $select.find('option').filter(function () {
+            return this.value === value;
+        }).get(0);
+    }
+
     function syncGroup($select, $group) {
         var currentValue = $select.val() || '';
         var currentText = '';
@@ -22,11 +28,17 @@
         $group.find('.cf-variation-pill').each(function () {
             var $pill = $(this);
             var isActive = $pill.data('value') === currentValue;
+            var option = findOptionByValue($select, $pill.data('value'));
+            var isAvailable = option && !option.disabled;
 
-            $pill.toggleClass('is-active', isActive);
-            $pill.attr('aria-pressed', isActive ? 'true' : 'false');
+            $pill.toggleClass('is-hidden', !isAvailable);
+            $pill.prop('disabled', !isAvailable);
+            $pill.attr('aria-hidden', isAvailable ? 'false' : 'true');
 
-            if (isActive) {
+            $pill.toggleClass('is-active', isActive && isAvailable);
+            $pill.attr('aria-pressed', isActive && isAvailable ? 'true' : 'false');
+
+            if (isActive && isAvailable) {
                 currentText = $pill.text();
             }
         });
@@ -42,6 +54,13 @@
         }
 
         var $wrap = $('<div class="cf-variation-swatches" />');
+        var syncAllGroups = function () {
+            $form.find('table.variations select').each(function () {
+                var $select = $(this);
+                var $group = $wrap.find('.cf-variation-group').eq($form.find('table.variations select').index(this));
+                syncGroup($select, $group);
+            });
+        };
 
         $variationTable.find('select').each(function () {
             var select = this;
@@ -93,20 +112,63 @@
         $variationTable.before($wrap);
         $form.addClass('cf-variation-swatches-ready').data('cfSwatchesReady', true);
 
-        $form.find('select').each(function () {
-            var $select = $(this);
-            var $group = $wrap.find('.cf-variation-group').eq($form.find('table.variations select').index(this));
-            syncGroup($select, $group);
+        syncAllGroups();
+
+        $form.on('woocommerce_update_variation_values reset_data', function () {
+            window.setTimeout(function () {
+                syncAllGroups();
+            }, 0);
+        });
+    }
+
+    function productScope($form) {
+        var $scope = $form.closest('.product');
+
+        if (!$scope.length) {
+            $scope = $form.closest('.cf-product-page');
+        }
+
+        return $scope.length ? $scope : $(document);
+    }
+
+    function variationPriceHtml(variation) {
+        if (!variation || !variation.price_html) {
+            return '';
+        }
+
+        var $price = $('<div />').html(variation.price_html).find('.price').first();
+
+        return $price.length ? $price.html() : variation.price_html;
+    }
+
+    function bindVariationPriceSync($form) {
+        if ($form.data('cfVariationPriceSyncReady')) {
+            return;
+        }
+
+        var $price = productScope($form).find('.cf-product-price .price').first();
+
+        if (!$price.length) {
+            return;
+        }
+
+        $form.data('cfVariationPriceSyncReady', true);
+        $price.data('cfOriginalPriceHtml', $price.html());
+
+        $form.on('found_variation show_variation', function (event, variation) {
+            var priceHtml = variationPriceHtml(variation);
+
+            if (priceHtml) {
+                $price.html(priceHtml);
+            }
         });
 
-        $form.on('reset_data', function () {
-            window.setTimeout(function () {
-                $form.find('select').each(function () {
-                    var $select = $(this);
-                    var $group = $wrap.find('.cf-variation-group').eq($form.find('table.variations select').index(this));
-                    syncGroup($select, $group);
-                });
-            }, 0);
+        $form.on('reset_data hide_variation', function () {
+            var originalPriceHtml = $price.data('cfOriginalPriceHtml');
+
+            if (originalPriceHtml) {
+                $price.html(originalPriceHtml);
+            }
         });
     }
 
@@ -164,6 +226,7 @@
             var $form = $(this);
 
             buildVariationSwatches($form);
+            bindVariationPriceSync($form);
             addBuyNowButtons($form);
         });
     });

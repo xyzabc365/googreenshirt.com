@@ -86,6 +86,18 @@ if ( ! empty( $product_categories ) && ! is_wp_error( $product_categories ) ) {
 						</div>
 					<?php endif; ?>
 
+					<?php if ( has_term( array( 't-shirt', 'back-to-school' ), 'product_cat', $product->get_id() ) ) : ?>
+						<div class="cf-size-chart">
+							<a class="cf-size-chart__link" href="#cf-size-chart-modal" data-open="#cf-size-chart-modal">
+								View Size Chart
+							</a>
+						</div>
+
+						<div id="cf-size-chart-modal" class="cf-size-chart-modal lightbox-content lightbox-white mfp-hide">
+							<img src="<?php echo esc_url( content_url( 'uploads/cloudfront-assets/size-chart-classic-tshirt.jpg' ) ); ?>" alt="GooGreenShirt classic T-shirt size chart" loading="lazy">
+						</div>
+					<?php endif; ?>
+
 					<div class="cf-product-cart">
 						<?php woocommerce_template_single_add_to_cart(); ?>
 					</div>

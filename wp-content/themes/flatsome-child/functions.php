@@ -16,6 +16,7 @@ add_filter('woocommerce_logout_default_redirect_url', 'child_theme_logout_redire
 add_filter('woocommerce_add_to_cart_redirect', 'child_theme_buy_now_redirect');
 add_filter('loop_shop_per_page', 'child_theme_collection_products_per_page', 20);
 add_filter('woocommerce_get_availability_text', 'child_theme_product_availability_text', 10, 2);
+add_filter('woocommerce_get_price_html', 'child_theme_variable_product_min_price_html', 10, 2);
 add_filter('flatsome_header_class', 'child_theme_disable_sticky_header_classes', 99);
 add_filter('nav_menu_css_class', 'child_theme_primary_menu_item_classes', 10, 4);
 add_action('pre_get_posts', 'child_theme_collection_archive_query', 20);
@@ -75,6 +76,27 @@ function child_theme_product_availability_text($availability, $product)
 	}
 
 	return $availability;
+}
+
+function child_theme_variable_product_min_price_html($price_html, $product)
+{
+	if (!$product instanceof WC_Product_Variable) {
+		return $price_html;
+	}
+
+	$min_regular_price = $product->get_variation_regular_price('min', true);
+	$min_sale_price = $product->get_variation_sale_price('min', true);
+	$min_price = $product->get_variation_price('min', true);
+
+	if ('' === $min_price) {
+		return $price_html;
+	}
+
+	if ($min_sale_price && $min_regular_price && (float) $min_sale_price < (float) $min_regular_price) {
+		return wc_format_sale_price(wc_price($min_regular_price), wc_price($min_sale_price));
+	}
+
+	return wc_price($min_price);
 }
 
 function child_theme_disable_sticky_header_classes($classes)

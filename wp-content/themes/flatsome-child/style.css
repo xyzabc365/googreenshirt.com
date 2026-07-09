@@ -2410,6 +2410,38 @@ input.cf-collection-filter-toggle[type="checkbox"] {
     margin: 0;
 }
 
+.cf-size-chart {
+    margin: -6px 0 18px;
+}
+
+.cf-size-chart__link {
+    color: var(--cf-green-dark);
+    display: inline-flex;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.35;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.cf-size-chart__link:hover,
+.cf-size-chart__link:focus {
+    color: var(--cf-ink);
+}
+
+.cf-size-chart-modal {
+    border-radius: 8px;
+    max-width: 640px;
+    padding: 0;
+    width: calc(100vw - 32px);
+}
+
+.cf-size-chart-modal img {
+    display: block;
+    height: auto;
+    width: 100%;
+}
+
 .cf-product-cart {
     margin-bottom: 28px;
 }
@@ -2427,6 +2459,10 @@ input.cf-collection-filter-toggle[type="checkbox"] {
 .cf-product-cart .woocommerce-variation-availability {
     margin-bottom: 16px;
     width: 100%;
+}
+
+.cf-product-cart .woocommerce-variation-price {
+    display: none !important;
 }
 
 .cf-product-cart .stock.in-stock {
@@ -2580,6 +2616,10 @@ input.cf-collection-filter-toggle[type="checkbox"] {
 .cf-variation-pill:disabled {
     cursor: not-allowed;
     opacity: .38;
+}
+
+.cf-variation-pill.is-hidden {
+    display: none;
 }
 
 .cf-product-cart table.variations {
