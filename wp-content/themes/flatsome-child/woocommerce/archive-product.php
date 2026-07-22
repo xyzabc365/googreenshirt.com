@@ -63,13 +63,8 @@ if ( ! function_exists( 'child_theme_collection_product_card' ) ) {
 			return;
 		}
 
-		$image_id           = $product->get_image_id();
-		$image_url          = $image_id ? wp_get_attachment_image_url( $image_id, 'woocommerce_thumbnail' ) : '';
-		$external_image_url = get_post_meta( get_the_ID(), '_codex_demo_product_image_url', true );
-
-		if ( ! $image_url && $external_image_url ) {
-			$image_url = $external_image_url;
-		}
+		$image_id  = $product->get_image_id();
+		$image_url = $image_id ? wp_get_attachment_image_url( $image_id, 'woocommerce_thumbnail' ) : '';
 
 		if ( ! $image_url && function_exists( 'wc_placeholder_img_src' ) ) {
 			$image_url = wc_placeholder_img_src( 'woocommerce_thumbnail' );

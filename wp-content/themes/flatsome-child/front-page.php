@@ -52,11 +52,6 @@ if (!function_exists('child_theme_home_product_card')) {
 		}
 
 		$image = get_the_post_thumbnail_url(get_the_ID(), 'woocommerce_thumbnail');
-		$external_image = get_post_meta(get_the_ID(), '_codex_demo_product_image_url', true);
-
-		if (!$image && $external_image) {
-			$image = $external_image;
-		}
 
 		if (!$image && function_exists('wc_placeholder_img_src')) {
 			$image = wc_placeholder_img_src('woocommerce_thumbnail');
